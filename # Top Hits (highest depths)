@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#Filters depths superior or equal to half of depth max 
+#Ranks sequences by highest to lowest depths 
+
+
+import re ,os
+from math import fmod
+
+dirEntree="/Users/annickcros/data/All_seqs/length_filter_102415/"
+dirSortie="/Users/annickcros/data/All_seqs/TopHits_102415/"
+fichierEntree="synth_length_102415.txt"
+fichierSortie="TopHits_102415.txt"
+
+
+#------------------------------------------------------------------------------------------------
+#Open files
+fs = open(dirSortie+fichierSortie,'w')
+
+
+print 'Traitement en cours .',
+
+cpt=0
+with open(dirEntree+fichierEntree,'r') as f:
+  for line in f :    
+    if line[:4]=='out_':
+      cpt+=1
+      fs.write(line)
+      line=f.next()
+
+    fds=[]
+    topds=[]
+    while line[1]!='-':
+      ds=re.search(r'[0-9]+',line)
+      if ds:
+        d,s =line.split()
+        fds.append((d,s))
+      line=f.next()
+
+    maxdepth=int(max(fds,key=lambda x:int(x[0]))[0])
+    for li in fds:
+      if int(li[0]) >= maxdepth*0.5 :
+        topds.append(li)
+    topds.sort(key=lambda x:int(x[0]),reverse=True)
+    for li in topds:
+      d,s=li
+      fs.write('{}\t{}\n'.format(d,s))
+
+    fs.write(line)
+    if fmod(cpt,500) ==0:
+      print '.',
+       
+fs.close()
+f.close()
+
+print '\n{} fastas traites \n'.format(cpt)
+print 'Le fichier sortie est : {}'.format(dirSortie+fichierSortie)
+     
+        
+        
+        
+    
+
+
+
+
+
