@@ -1,0 +1,8 @@
+
+for filename in $(ls ~/data/All_Seqs/fasta_102415/)
+ do
+  	echo "$filename"
+  	awk 'NR==1 {print ; next} {printf /^>/ ? "\n"$0"\n" : $1} END {printf "\n"}' ~/data/All_Seqs/fasta_102415/$filename > ~/data/All_Seqs/fasta_oneline_102415/$filename
+  	grep -v ">" ~/data/All_Seqs/fasta_oneline_102415/$filename | sort | uniq -c  | sort -nr > ~/data/All_Seqs/representatives_102415/$filename
+
+done
