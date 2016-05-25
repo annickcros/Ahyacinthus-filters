@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+dir='/Users/annickcros/data/All_Seqs/Merged_TopHits/'
+
+#Pour demarrer le programme faite en ligne de commande (shell ?)
+#python nomduprogramme nomdufichier (separe par des blancs)
+
+## fichier entrée synthese.txt
+synthese=open(dir+'Merged_TopHits_102815.txt','r')
+
+##fichier sortie parseSynthese.txt
+fparse = open('/Users/annickcros/data/Genotypes/parseSynthese_min10_102815.txt','w')
+##fichier sortie counts_parseSynthese.txt 
+fcounts=open('/Users/annickcros/data/Genotypes/counts_parseSynthese_min10_102815.txt','w')
+
+#synthese = open(sys.argv[1], 'r')
+
+# sequence: [ (primers list), (sites list), (cols list), (depths list), (fileName_list)]
+sequences ={}
+
+for line in synthese:
+    #line = line.rstrip()
+    if line[:4] == "out_":
+        fileName= line
+        site, col, primer = line.split(".")[0].split("_")[1:]
+        line = synthese.next()
+        while (line[0] != "-"):
+            if len(line) > 1:
+                line = line.rstrip()
+                depth, sequence = line.split()
+                # bd idea since we look for exactly the same occurrence
+                # should be more flexible
+                if sequences.has_key(sequence):                     
+                    sequences[sequence][0].append(primer)
+                    sequences[sequence][1].append(site)
+                    sequences[sequence][2].append(col)
+                    sequences[sequence][3].append(depth)
+                    sequences[sequence][4].append(fileName)
+                else:
+                    sequences[sequence] = [[primer], [site], [col], [depth], [fileName] ]
+            line = synthese.next()
+synthese.close()
+
+
+
+seqToRemove = []
+for seq in sequences:
+    if len(set(sequences[seq][0])) > 1:
+        # print "ERROR, Primer form %s_%s_%s occurs in more than one primer" % (sequences[seq][4], sequences[seq][2], sequences[seq][0])
+        seqToRemove.append(seq)
+    elif(max(map(int, sequences[seq][3])) < 10 ):
+        #print "ERROR, Sequence form %s_%s_%s has max occurrence of only 1 %s " % (sequences[seq][4], sequences[seq][2], sequences[seq][0], sequences[seq][3])
+        seqToRemove.append(seq)
+    elif (len(set(sequences[seq][2])) < 10 ):
+        # print "ERROR, Sequence form %s_%s_%s has max occurrence of only 1 %s " % (sequences[seq][4], sequences[seq][2], sequences[seq][0], sequences[seq][3])
+        seqToRemove.append(seq)
+##    else:
+##        print seq
+##        print "\t%s" % sequences[seq][3]
+##        print "\t%s" % sequences[seq][4]
+
+
+# Delete bad sequences
+
+for seq in seqToRemove:
+    del(sequences[seq])
+
+mapNameSeq ={}  # {fileName: {seq:depth, seq:depth, ...}}
+for seq in sequences:
+    for filePos in range(0, len(sequences[seq][4])):
+        #print "%s" % "".join(sequences[seq][4])
+        if mapNameSeq.has_key(sequences[seq][4][filePos]):
+            mapNameSeq[sequences[seq][4][filePos]].append((seq, sequences[seq][3][filePos]))
+        else:
+            mapNameSeq[sequences[seq][4][filePos]] = [(seq, sequences[seq][3][filePos])]
+
+
+##for fileName in mapNameSeq:
+##    print fileName.rstrip()
+##    for seq in mapNameSeq[fileName]:
+##        print "\t",seq[1],"\t", seq[0]
+##    print "-" * 60
+
+## ecriture fichier parseSynthese.txt
+print(u'écriture du fichier parseSynthese.txt')
+for fileName in mapNameSeq:
+    fparse.write(fileName.rstrip()+'\n')
+    for seq in mapNameSeq[fileName]:
+        fparse.write( seq[1]+"\t"+seq[0]+"\n")
+    fparse.write("-" * 60+"\n")
+fparse.close()
+
+
+## ecriture fichier counts.txt
+print(u'écriture du fichier counts.txt')
+titres=['primers','sites','cols','depths']
+separation='-'*80+'\n'
+for data in sequences.iteritems():
+    sequence=data[0]
+    listes=data[1][:-1]
+    fcounts.write(sequence+'\n')
+    for id,liste in enumerate(listes):
+        fcounts.write(titres[id]+'\t')
+        for item in liste:
+            fcounts.write(item+'\t')
+        fcounts.write('\n')
+    fcounts.write(separation)
+fcounts.close()
+
+print(u'traitement terminé')
+
+# #     print seq 
+# #     print "\t", "primers %s" % sequences[seq][0]
+# #     print "\t", "sites %s" % sequences[seq][1]
+# #     print "\t", "cols %s" % sequences[seq][2]
+# #     print "\t", "depths %s" % sequences[seq][3]  
+
