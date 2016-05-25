@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+
+#synthese = open(sys.argv[1], 'r')
+synthese = open('/Users/annickcros/data/All_seqs/Merged_TopHits/Merged_TopHits_102815.txt','r')
+#fichier sortie counts
+fsortie=open('/Users/annickcros/data/All_seqs/Merged_TopHits/counts_Merged_102815.txt','w')
+
+# sequence: [ (primers list), (sites list), (cols list), (depths list), (fileName_list)]
+sequences ={}
+
+for line in synthese:
+    #line = line.rstrip()
+    if line[:4] == "out_":
+        fileName= line
+        site, col, primer = line.split(".")[0].split("_")[1:]
+        line = synthese.next()
+        while (line[0] != "-"):
+            if len(line) > 1:
+                line = line.rstrip()
+                depth, sequence = line.split()
+                # bd idea since we look for exactly the same occurrence
+                # should be more flexible
+                if sequences.has_key(sequence):                     
+                    sequences[sequence][0].append(primer)
+                    sequences[sequence][1].append(site)
+                    sequences[sequence][2].append(col)
+                    sequences[sequence][3].append(depth)
+                    sequences[sequence][4].append(fileName)
+                else:
+                    sequences[sequence] = [[primer], [site], [col], [depth], [fileName] ]
+            line = synthese.next()
+synthese.close()
+
+
+##for data in sequences.iteritems():
+##    sequence=data[0]
+##    items=data[1]
+##    print sequence
+##    print 'primer',items[0]
+##    print 'site',items[1]
+##    print 'colony',items[2]
+##    print 'depth',items[3]
+##    print('-'*80)
+
+titres=['primers','sites','cols','depths']
+separation='-'*80+'\n'
+for data in sequences.iteritems():
+    sequence=data[0]
+    listes=data[1][:-1]
+    fsortie.write(sequence+'\n')
+    for id,liste in enumerate(listes):
+        fsortie.write(titres[id]+'\t')
+        for item in liste:
+            fsortie.write(item+'\t')
+        fsortie.write('\n')
+    fsortie.write(separation)
+        
+fsortie.close()
+
+print u'traitement terminé'
+            
+    
+    
+             
+  
