@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys , re ,os
+
+dir=os.path.expanduser("~/data/assemblebatch_last2_102415/")
+
+rep=os.listdir(dir)
+for sousRep in rep:
+    secteur=re.search(r'_(S[0-9]+)_',sousRep)
+    if secteur!=None:
+      print(sousRep)
+      secteur=secteur.group(1)
+      dirSecteur=dir+sousRep+"/fasta/"
+      fichiersFasta=os.listdir(dirSecteur)
+      for fichier in fichiersFasta:
+        if re.match(r'(S[0-9]+)_',fichier)==None:
+          secteurFichier=secteur+"_"+fichier
+          os.rename(dirSecteur+fichier,dirSecteur+secteurFichier)
+
