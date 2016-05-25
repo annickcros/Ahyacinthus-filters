@@ -1,0 +1,8 @@
+#change fastq to fasta, put in ALL_SEQS/fasta file
+for filename in $(ls ~/data/All_Seqs/cleaned_102415/)
+ do
+  	#seqret ~/data/ALL_SEQS/cleaned/$filename -sformat fastq ~/data/ALL_SEQS/fasta/$filename -osformat fasta
+  	seqret ~/data/All_Seqs/cleaned_102415/$filename -sformat fastq ~/data/All_Seqs/fasta_102415/$filename -osformat fasta
+
+ done
+ 
