@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#Max and min length filter
+
+
+import re ,os
+from math import fmod
+
+
+# Length parameters
+longmax=190
+longmin=15
+
+dirEntree="/Users/annickcros/data/All_seqs/representatives_102415/"
+dirSortie="/Users/annickcros/data/All_seqs/length_filter_102415/"
+fichierSortie="synth_length_102415.txt"
+fichierSortieRejets="synth_length_rej_102415.txt"
+
+#------------------------------------------------------------------------------------------------
+#Open files
+fs = open(dirSortie+fichierSortie,'w')
+fr = open(dirSortie+fichierSortieRejets,'w')
+
+#liste fichiers triee par ordre alpha
+rep=os.listdir(dirEntree)
+rep=[fichier for fichier in rep if fichier[-6:]=='.fasta']
+def ordre(scp):
+  s,c,p = scp.split('_')
+  s=int(s[1:])
+  c=int(c[1:])
+  p=int(p[:-6])
+  return (s,c,p)
+rep.sort(key=lambda x:ordre(x))
+
+#Reading length
+print 'Traitement en cours .',
+
+cpt=0
+for fichier in rep :
+   longconformes=''
+   longnonconformes=''
+   with open(dirEntree+fichier,'r') as f:
+     for line in f:      
+       ds=re.search(r'[0-9]+',line)
+       if ds:
+         d,s = line.split()
+         d,s =d.strip(),s.strip()
+         if longmin<=len(s)<=longmax :
+            longconformes+='{}\t{}\n'.format(d,s)
+         else:
+            longnonconformes+='{}\t{}\n'.format(d,s)
+   entete='out_'+fichier+'\n'
+   separation='-'*64 +'\n'    
+   if longconformes != '':
+     fs.write(entete+longconformes+separation)
+   if longnonconformes != '':
+     fr.write(entete+longnonconformes+separation)
+   cpt+=1
+   if fmod(cpt,500)==0:
+     print '.',
+  
+print
+print str(cpt)+' fichiers traites\n'
+print 'les fichiers de sortie sont :\n{}\n{}'.format(fichierSortie,fichierSortieRejets)
+
+#close files   
+fs.close()
+fr.close()      
+
+
+
+
+
