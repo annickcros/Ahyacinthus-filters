@@ -1,0 +1,123 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import re
+
+#filters the 2 sequences with the highest depth, if they are equal, the sequences are selected by  occurrence
+#sortie dans le fichier topTwo.txt
+
+dirEntree='/Users/annickcros/data/Cleanup/satellite_09/'
+dirSortie='/Users/annickcros/data/Genotypes/topTwo_depth_09/'
+fichierEntree ='sat_for_toptwo.txt'
+fichierSortie ='topTwo_depth_09.txt'
+
+synthese = open(dirEntree+fichierEntree,'r')
+ftoptwo= open(dirSortie+fichierSortie,'w')
+
+#--------------------------------------------------------------------
+#fonction cptOccurrence()
+#dictionaire dictseq[sequence]:index
+#dictionaire dictnum[index]:sequence
+#dictionaire nboccurrences[sequence]:nbr occurrences
+#dictionaire seqs[nbr occurrences] : [sequences liste]
+
+# occurrence en fonction des sequences
+# nboccurrences[sequence]: occurrence
+# nbscp nombre de Sx_Cy_z.fasta
+
+nbscp = 0
+nboccurrences ={}
+individus = set()
+populations = set()
+
+def cptoccurrences(fichier):
+  
+  global nbscp, nboccurrences,individus, populations
+  siteColPrim='S[0-9]+_C[0-9]+_[0-9]+'
+  siteColPrim=re.compile(siteColPrim)
+  chiffres=[str(x) for x in range(0,10)] 
+  for line in fichier:
+    scp=re.search(siteColPrim,line)    
+    if scp:
+      scp= scp.group(0)
+      site,col,prime = scp.split('_')
+      idIndividu=site+col
+      individus.add(idIndividu)
+      populations.add(site)
+      nbscp +=1
+    if line[0] in chiffres:
+        if len(line)>1:
+          line=line.rstrip()
+          d,sequence=line.split()
+          if nboccurrences.has_key(sequence):
+             nboccurrences[sequence]+=1
+          else:
+             nboccurrences[sequence]=1
+   
+
+cptoccurrences(synthese)
+
+synthese.close() 
+nbindividus=len(individus)
+nbpopulations=len(populations)
+
+#dict des sequences et numerotation
+nbseq= len(nboccurrences.keys())
+dictseq={}
+dictnum={}
+for i in range(1,nbseq):
+   dictseq[i]=nboccurrences.keys()[i]
+   dictnum[nboccurrences.keys()[i]]=i
+
+#sequence en fonction des occurrences
+seqs={}
+for seq,n in nboccurrences.items():
+    if seqs.has_key(n):
+        seqs[n].append(seq)
+    else:
+        seqs[n]=[seq]
+
+#-------------------------------------------------------------------------
+
+# traitement deux premiers
+# dos= [depth,occurrence,sequence]
+synthese = open(dirEntree+fichierEntree,'r')
+template='{}\t{}\n'
+
+def toptwo(fichier):
+  global occurrence
+  siteColPrim='S[0-9]+_C[0-9]+_[0-9]+'
+  siteColPrim=re.compile(siteColPrim)
+  chiffres=[str(x) for x in range(0,10)] 
+  for line in fichier:
+    scp=re.search(siteColPrim,line)    
+    if scp:
+      scp=scp.group(0)
+      ftoptwo.write(line)       
+      dos=[]
+      site,col,prime = scp.split('_')
+      line=fichier.next()
+      while line[0] in chiffres:
+        if len(line)>1:
+          line=line.rstrip()
+          depth,sequence=line.split()          
+          dos.append([int(depth),int(nboccurrences[sequence]),sequence])
+          line=fichier.next() 
+      dos.sort(reverse=True)
+      if len(dos)>1:
+            ftoptwo.write(template.format(dos[0][0],dos[0][2]))
+            ftoptwo.write(template.format(dos[1][0],dos[1][2]))
+            if (dos[0][0]==dos[0][1]) and (dos[1][0]==dos[1][1]):
+              print "cas particulier ",scp
+      else:
+            ftoptwo.write(template.format(dos[0][0],dos[0][2]))
+         
+    ftoptwo.write('-'*60+'\n')         
+
+print "traitement en cours ...."             
+toptwo(synthese)      
+ftoptwo.close()
+print "fin traitement"
+print "resultats dans fichier texte : ",dirSortie+fichierSortie
+
+
+
