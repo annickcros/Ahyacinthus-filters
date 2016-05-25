@@ -1,0 +1,5 @@
+for filename in $(ls /Users/annickcros/data/All_Seqs/fastq_last2_102415)
+ do
+ 	echo "working on", $filename
+java -jar /Users/annickcros/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 /Users/annickcros/data/All_Seqs/fastq_last2_102415/$filename /Users/annickcros/data/All_Seqs/cleaned_102415/clean_$filename ILLUMINACLIP:/Users/annickcros/programs/Trimmomatic-0.33/Reverseprimer.fa:2:30:10 SLIDINGWINDOW:4:20 MINLEN:10	 
+ done
