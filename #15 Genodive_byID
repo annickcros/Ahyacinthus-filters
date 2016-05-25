@@ -1,0 +1,158 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import re
+
+# zone modifiable
+# 
+dirEntree='/Users/annickcros/data/Genotypes/topTwo_alea_09/'
+dirSortie='/Users/annickcros/data/Genodive/STR_09/'
+fichierEntree='topTwo_alea_000.txt'
+fichierSortieGenodive='STR09_ID.txt'
+fichierSortieRepertoire='repertoire_STR09_ID.txt'
+
+titre='Input file based on results of toptwo_alea09_000'
+listePrimersExclus=[]              #exemple [1,2] exclude primers 1 and 2
+                                   #        [] if no exclusions
+
+#------------------------------------------------------------
+synthese = open(dirEntree+fichierEntree,'r')
+listePrimersExclus=[str(p) for p in listePrimersExclus]
+# nbscp : nombre de Sx_Cy_z
+# populations : liste des  populations
+# individus : liste des individus Sx_Cy
+# primers : ensemble des primers z
+# index[sequence] : numerotation des sequences
+# sequences[i] : sequence de numero i
+# datasIndividus dict[idIndividu] : [dict[primer] : [seq1,seq2,......]]
+
+
+def extractionDatas(fichier):  
+  nbscp=0
+  individus=set()
+  populations = set()
+  primers=set()
+  dernier=0
+  index = {}
+  sequences = {}
+  datasIndividus = {}
+  
+  siteColPrim='S[0-9]+_C[0-9]+_[0-9]+'
+  siteColPrim=re.compile(siteColPrim)
+  chiffres=[str(x) for x in range(0,10)] 
+  for line in fichier:
+    scp=re.search(siteColPrim,line)    
+    if scp:
+      site,col,primer = scp.group(0).split('_')
+      if primer not in listePrimersExclus:
+        idIndividu=site+'_'+col
+        individus.add(idIndividu)
+        populations.add(site)
+        primers.add(primer)
+        nbscp +=1
+    if line[0] in chiffres and (primer not in listePrimersExclus):
+        if len(line)>1:
+          line=line.rstrip()
+          d,sequence=line.split()
+          if not index.has_key(sequence):
+            dernier+=1
+            index[sequence]=dernier
+          if datasIndividus.has_key(idIndividu):
+            if datasIndividus[idIndividu].has_key(primer):
+              datasIndividus[idIndividu][primer].append(index[sequence])
+            else:
+              datasIndividus[idIndividu][primer]=[index[sequence]]
+          else:
+            datasIndividus[idIndividu]={}
+            if datasIndividus[idIndividu].has_key(primer):
+              datasIndividus[idIndividu][primer].append(index[sequence])
+            else:
+              datasIndividus[idIndividu][primer]=[index[sequence]]
+                           
+  for seq,i in index.items():
+    sequences[i]=seq
+  lmax=max(map(len,populations))+1
+  populations=list(populations)
+  populations.sort(key=lambda x: str('{0:0>'+str(lmax)+'}').format(x).lower())
+  primers=list(primers)
+  individus=list(individus)
+  return [nbscp,individus,populations,primers,index,sequences,datasIndividus] 
+
+#organisation des donnees
+print 'traitement en cours...'
+nbscp,individus,populations,primers,index,sequences,datasIndividus = extractionDatas(synthese)
+longIdSeq=len(str(max(sequences.keys())))
+
+# tri noms individus par site,colonnie
+#fonction pour tri des individus Sx_Cy
+def f(x):
+  s,c=x.split('_')
+  s=int(s[1:])
+  c=int(c[1:])
+  return (s,c)
+
+individus.sort(key= lambda x:f(x))
+  
+#traitement des donnees pour affichage
+# creation la table de genotypes : (liste) tableGenotypes
+
+
+nbLoci=len(primers)
+primers.sort(key = lambda x:int(x))
+indexPrimer={}
+for i,p in enumerate(primers):
+  indexPrimer[p]=i
+  
+tableGenotypes=''
+maxLevel=0
+for idInd in individus:
+  prims = datasIndividus[idInd]
+  lineGenotypes=['0'*2*longIdSeq for n in range(nbLoci)]
+  for primer , listIdSeq in prims.items():
+    idPop=re.search('S([0-9]+)',idInd).group(1)
+    listIdSeq=[str(id).rjust(longIdSeq,'0') for id in listIdSeq]
+    nl=len(listIdSeq)
+    if nl> maxLevel:
+      maxLevel=nl
+    if nl==1:
+      genotype = listIdSeq[0]*2
+    else:  
+      genotype=''.join(listIdSeq)
+    lineGenotypes[indexPrimer[primer]]=genotype
+  tableGenotypes+=('{}\t{}\t{}\n'.format(idPop,idInd,'\t'.join(lineGenotypes)))
+maxPloidyLevel=maxLevel  
+
+
+#creations lignes
+colPopulations='\t'.join(populations)                     
+nomsLoci='\t'.join(['loc'+str(p) for p in primers])  
+
+li1='{}\n'.format(titre)
+li2=str('{}\t'*4+'{}\n').format(len(individus),len(populations),len(primers),maxPloidyLevel,longIdSeq)
+li3='{}\n'.format('\n'.join(populations))
+li4='{}\t{}\t{}\n'.format('Pop','Inds',nomsLoci)
+li5=tableGenotypes
+lignes=[li1,li2,li3,li4,li5]
+
+#sortie fichier
+fgenodive=open(dirSortie+fichierSortieGenodive,'w')
+for li in lignes:
+  fgenodive.write(li)
+
+frepertoire=open(dirSortie+fichierSortieRepertoire,'w')
+repertoire={}
+for seq,i in index.items():
+  repertoire[int(i)]=seq
+for i in sorted(repertoire.keys()):
+  frepertoire.write('{}\t{}\n'.format(i,repertoire[i]))
+  
+
+fgenodive.close()
+frepertoire.close()
+synthese.close()
+
+print '\nle fichier sortie est : '+dirSortie+fichierSortieGenodive
+print '\nle fichier repertoire de sequences est : ',dirSortie+fichierSortieRepertoire
+print "\nfin traitement"
+
+
+
