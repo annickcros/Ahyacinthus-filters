@@ -1,0 +1,11 @@
+import  re ,os
+
+dir="/Users/annickcros/data/All_Seqs/fasta_102415/"
+
+rep=os.listdir(dir)
+
+for fichier in rep:
+    rechFichier = re.search(r'(clean_)?(.*)\.fastq',fichier)
+    if rechFichier != None:
+        nomFichier=rechFichier.group(2)
+        os.rename(dir+fichier,dir+ nomFichier + '.fasta')   
