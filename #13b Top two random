@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import re, os, random
+
+
+#filters the top two sequences by depth, if depth is the same choice is made randomly 
+#sortie dans le fichier topTwo.txt
+
+
+dirEntree='/Users/annickcros/data/Cleanup09/satellite_09/'
+dirSortie='/Users/annickcros/data/Genotypes/topTwo_alea_09/'
+fichierEntree ='sat_for_toptwo.txt'
+fichierSortie ='topTwo_alea_V2.txt'
+
+#-------------------------------------------------------------------------
+synthese = open(dirEntree+fichierEntree,'r')
+racine=fichierSortie[:-4]
+
+def renumfichier(dir,racine):
+  ld=os.listdir(dir)
+  racine='topTwo_alea'
+  ex='('+racine+')'+'_'+'([0-9]+)'+'.txt'
+  regex=re.compile(ex)
+  lrch=[]
+  for f in ld:
+    rch=re.findall(regex,f)
+    if rch:
+      lrch.append(rch)
+  if lrch:     
+    nmax=max([int(x[0][1]) for x in lrch])+1
+  else:
+    nmax=0
+  return racine+'_'+str(nmax).rjust(3,'0')+'.txt'
+
+fichierSortie=renumfichier(dirSortie,racine)
+ftoptwo= open(dirSortie+fichierSortie,'w')
+
+# traitement deux premiers
+# lds= liste [[depth,sequence],..]
+# nbscp nombre de Sx_Cy_z.fasta
+# premier depth le plus eleve 
+# second depth le plus eleve apres premier
+# ld liste des depths
+
+synthese = open(dirEntree+fichierEntree,'r')
+template='{}\t{}\n'
+nbscp = 0
+
+def toptwo(fichier):
+  siteColPrim='S[0-9]+_C[0-9]+_[0-9]+'
+  siteColPrim=re.compile(siteColPrim)
+  chiffres='0123456789' 
+  for line in fichier:
+    scp=re.search(siteColPrim,line)    
+    if scp:
+      scp=scp.group(0)
+      ftoptwo.write(line)       
+      site,col,prime = scp.split('_')
+      line=fichier.next()
+      lds=[]
+      while line[0] in chiffres:
+        if len(line)>1:
+          line=line.rstrip()
+          depth,sequence=line.split()          
+          lds.append([depth,sequence])
+          line=fichier.next()
+        
+      lds.sort(key=lambda x:int(x[0]))
+      premier=lds[0]
+      ld=[x[0] for x in lds]
+      if len(lds)==1:
+        ftoptwo.write(template.format(premier[0],premier[1]))
+      elif len(lds)==2:
+        second=lds[1]
+        ftoptwo.write(template.format(premier[0],premier[1]))
+        ftoptwo.write(template.format(second[0],second[1]))
+      elif len(lds)>2:
+        second=lds[1]
+        premiercount= ld.count(premier[0])
+        secondcount= ld.count(second[0])
+        if premiercount == 1:
+          if secondcount>1:
+            lcandidats=[]
+            for x,y in lds:
+              if x == second[0]:
+                lcandidats.append([x,y])
+            premier=lds[0]   
+            second=random.sample(lcandidats,1)[0]      
+        else:
+            lcandidats=[]
+            for x,y in lds:
+              if x == premier[0]:
+                lcandidats.append([x,y])
+            premier,second=random.sample(lcandidats,2)
+            
+       
+        ftoptwo.write(template.format(premier[0],premier[1]))
+        ftoptwo.write(template.format(second[0],second[1]))
+        if (premier==second):
+            print premier
+            print second
+            print "cas particulier, egalite des profondeurs et des sequences ",scp
+            x=raw_input()
+     
+    ftoptwo.write(line)
+   
+print "traitement en cours ...."             
+toptwo(synthese)      
+ftoptwo.close()
+print "fin traitement"
+print "resultats dans fichier texte : ",dirSortie+fichierSortie
+
+
+
