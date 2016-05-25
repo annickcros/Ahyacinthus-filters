@@ -1,0 +1,193 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import re
+
+
+# 
+dirEntree='/Users/annickcros/data/Genotypes/topTwo_alea_09/'
+dirSortie='/Users/annickcros/data/Genodive/STR_09/'
+fichierEntree='topTwo_alea_001.txt'
+fichierSortieGenodive='STR09_len001.txt'
+fichierSortieRepertoire='repertoire_STR09_len.txt'
+
+titre='Input file based on results of STR09_len.txt'
+listePrimersExclus=[]              #exemple [1,2] to exclude primers 1 and 2
+                                   #        [] if no exclusion
+
+
+#------------------------------------------------------------
+synthese = open(dirEntree+fichierEntree,'r')
+listePrimersExclus=[str(p) for p in listePrimersExclus]
+
+# nbscp : nombre de Sx_Cy_z
+# populations : liste des  populations
+# individus : liste des individus Sx_Cy
+# primers : liste des primers z
+# dictionaire index  [sequence : numero de la sequence]
+# dictionaire sequences  [i : sequence de numero i]
+# dictionaire datasIndividus [idIndividu : [primer : [idSeq1,idSeq2,.....]]]
+# longSeq dictionaire [idSequence : longueur de la sequence]
+
+
+def extractionDatas(fichier):  
+  nbscp=0
+  individus=set()
+  populations = set()
+  primers=set()
+  dernier=0
+  index = {}
+  sequences = {}
+  datasIndividus = {}
+  
+  siteColPrim='S[0-9]+_C[0-9]+_[0-9]+'
+  siteColPrim=re.compile(siteColPrim)
+  chiffres=[str(x) for x in range(0,10)] 
+  for line in fichier:
+    scp=re.search(siteColPrim,line)    
+    if scp:
+      site,col,primer = scp.group(0).split('_')
+      if primer not in listePrimersExclus:
+        idIndividu=site+'_'+col
+        individus.add(idIndividu)
+        populations.add(site)
+        primers.add(primer)
+        nbscp +=1
+    if line[0] in chiffres and (primer not in listePrimersExclus):
+        if len(line)>1:
+          line=line.rstrip()
+          d,sequence=line.split()
+          if not index.has_key(sequence):
+            dernier+=1
+            index[sequence]=dernier
+          if datasIndividus.has_key(idIndividu):
+            if datasIndividus[idIndividu].has_key(primer):
+              datasIndividus[idIndividu][primer].append(index[sequence])
+            else:
+              datasIndividus[idIndividu][primer]=[index[sequence]]
+          else:
+            datasIndividus[idIndividu]={}
+            if datasIndividus[idIndividu].has_key(primer):
+              datasIndividus[idIndividu][primer].append(index[sequence])
+            else:
+              datasIndividus[idIndividu][primer]=[index[sequence]]
+                           
+  for seq,i in index.items():
+    sequences[i]=seq
+  lmax=max(map(len,populations))+1
+  populations=list(populations)
+  populations.sort(key=lambda x: str('{0:0>'+str(lmax)+'}').format(x).lower())
+  primers=list(primers)
+  individus=list(individus)
+  return [nbscp,individus,populations,primers,index,sequences,datasIndividus] 
+
+#organisation des donnees
+print 'traitement en cours...'
+nbscp,individus,populations,primers,index,sequences,datasIndividus = extractionDatas(synthese)
+longIdSeq=len(str(max(sequences.keys())))
+
+# tri noms individus par site,colonnie
+#fonction pour tri des individus Sx_Cy
+def f(x):
+  s,c=x.split('_')
+  s=int(s[1:])
+  c=int(c[1:])
+  return (s,c)
+
+individus.sort(key= lambda x:f(x))
+
+#longSeq : dictionnaire des longueurs
+longSeq={}
+for i in index.values():
+  longSeq[i]=len(sequences[i])
+maxLongueurNomGenotype= len(str(max(longSeq.values())))
+
+  
+#traitement des donnees pour affichage
+# creation la table de genotypes : (liste) tableGenotypes
+nbLoci=len(primers)
+primers.sort(key = lambda x:int(x))
+indexPrimer={}
+for i,p in enumerate(primers):
+  indexPrimer[p]=i
+  
+tableGenotypes=''                           #pour affichage
+dictGenotypes={}                            #pour calcul collisions cles:genomes par id  valeurs: genomes par long 
+maxLevel=0                                  #pour le calcul de maxPlidyLevel
+for idInd in individus:
+  prims=datasIndividus[idInd].items()
+  lineGenotypes=['0'*2*maxLongueurNomGenotype for n in range(nbLoci)]
+  for primer , listIdSeq in prims:
+    idPop=re.search('S([0-9]+)',idInd).group(1)
+    listLongSeq =[str(longSeq[id]).rjust(maxLongueurNomGenotype,'0') for id in listIdSeq]
+
+    nl=len(listLongSeq)
+    if nl> maxLevel:
+      maxLevel=nl
+    if nl==1:
+      genotype = listLongSeq[0]*2
+    else:  
+      genotype=''.join(listLongSeq)
+    lineGenotypes[indexPrimer[primer]]=genotype
+    #----------------pour calcul des collisions-----------------------
+    listIdSeq=[str(id).rjust(longIdSeq,'0') for id in listIdSeq]
+    nl2=len(listIdSeq)
+    if nl2==1:
+      genotype2 = listIdSeq[0]*2
+    else:  
+      genotype2=''.join(listIdSeq)
+    if dictGenotypes.has_key(genotype):
+      dictGenotypes[genotype].add(genotype2)
+    else:
+      dictGenotypes[genotype]= set()
+      dictGenotypes[genotype].add(genotype2)  
+    #-----------------------------------------------------------------  
+    
+  tableGenotypes+=('{}\t{}\t{}\n'.format(idPop,idInd,'\t'.join(lineGenotypes)))
+
+maxPloidyLevel=maxLevel
+#calcul collisions
+collisions=[g for g in dictGenotypes.values() if len(g)>1]
+
+  
+
+#creations lignes
+colPopulations='\t'.join(populations)                     
+nomsLoci='\t'.join(['loc'+str(p) for p in primers]) 
+li1='{}\n'.format(titre)
+li2=str('{}\t'*4+'{}\n').format(len(individus),len(populations),len(primers),maxPloidyLevel,maxLongueurNomGenotype)
+li3='{}\n'.format('\n'.join(populations))
+li4='{}\t{}\t{}\n'.format('Pop','Inds',nomsLoci)
+li5=tableGenotypes
+lignes=[li1,li2,li3,li4,li5]
+
+#sortie fichier
+fgenodive=open(dirSortie+fichierSortieGenodive,'w')
+for li in lignes:
+  fgenodive.write(li)
+
+frepertoire=open(dirSortie+fichierSortieRepertoire,'w')
+repertoire={}
+for seq,i in index.items():
+  repertoire[i]=[i,longSeq[i],seq]
+
+template='{}\t{}\t{}\n'
+frepertoire.write(template.format('numero','longueur','sequence'))
+for i in sorted(repertoire.keys(),key = lambda x:int(x)):
+  n,l,s=repertoire[i]
+  frepertoire.write(template.format(n,l,s))  
+
+fgenodive.close()
+frepertoire.close()
+synthese.close()
+
+ncollisions=len(collisions)
+ngenotypes=len(dictGenotypes.keys())
+frequence = (ncollisions*1.0)/ngenotypes
+print 'Pourcentage collisions : {} sur {} genotypes, soit {:.2%}\n'.format(ncollisions,ngenotypes,frequence)
+
+print 'Le fichier sortie est : {}\n'.format(dirSortie+fichierSortieGenodive)
+print 'le fichier repertoire de sequences est : {}\n'.format(dirSortie+fichierSortieRepertoire)
+print "fin traitement"
+
+#for k,g in dictGenotypes.items():
+#  print 'par long:{}\tpar num: {}\n'.format(k,list(g))
