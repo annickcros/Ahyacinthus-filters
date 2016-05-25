@@ -1,0 +1,20 @@
+######################################################
+#####Installing PEAR ####First you need to make sure you have Libtool, autoconf and automake 
+#git clone https://github.com/xflouris/PEAR.git
+#cd PEAR
+#./autogen.sh
+#./configure
+#make
+#sudo make install
+
+#####To merge your paired reads use PEAR
+#####Not sure in what order to do this step
+#Usage: pear <options>
+#Standard (mandatory):
+#  -f, --forward-fastq         <str>     Forward paired-end FASTQ file.
+#  -r, --reverse-fastq         <str>     Reverse paired-end FASTQ file.
+#  -o, --output                <str>     Output filename.
+
+#to run: in code, write bash 1_MergePairs_2014.sh
+
+PEAR -f /Users/annickcros/data/Raw_Sequences_2014/acah_S1_L001_R1_001_small.fastq -r /Users/annickcros/data/Raw_Sequences_2014/acah_S1_L001_R2_001_small.fastq -o S2014_Paired.fq
