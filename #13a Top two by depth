@@ -3,7 +3,7 @@
 import re
 
 #filters the 2 sequences with the highest depth, if they are equal, the sequences are selected by  occurrence
-#sortie dans le fichier topTwo.txt
+#Output file topTwo.txt
 
 dirEntree='/Users/annickcros/data/Cleanup/satellite_09/'
 dirSortie='/Users/annickcros/data/Genotypes/topTwo_depth_09/'
@@ -14,15 +14,15 @@ synthese = open(dirEntree+fichierEntree,'r')
 ftoptwo= open(dirSortie+fichierSortie,'w')
 
 #--------------------------------------------------------------------
-#fonction cptOccurrence()
-#dictionaire dictseq[sequence]:index
-#dictionaire dictnum[index]:sequence
-#dictionaire nboccurrences[sequence]:nbr occurrences
-#dictionaire seqs[nbr occurrences] : [sequences liste]
+#function cptOccurrence()
+#dictionary dictseq[sequence]:index
+#dictionary  dictnum[index]:sequence
+#dictionary  nboccurrences[sequence]:nbr occurrences
+#dictionary  seqs[nbr occurrences] : [sequences liste]
 
-# occurrence en fonction des sequences
+# occurrence depending on sequence
 # nboccurrences[sequence]: occurrence
-# nbscp nombre de Sx_Cy_z.fasta
+# nbscp number of Sx_Cy_z.fasta
 
 nbscp = 0
 nboccurrences ={}
@@ -60,7 +60,7 @@ synthese.close()
 nbindividus=len(individus)
 nbpopulations=len(populations)
 
-#dict des sequences et numerotation
+#dict of sequences and numbering 
 nbseq= len(nboccurrences.keys())
 dictseq={}
 dictnum={}
@@ -68,7 +68,7 @@ for i in range(1,nbseq):
    dictseq[i]=nboccurrences.keys()[i]
    dictnum[nboccurrences.keys()[i]]=i
 
-#sequence en fonction des occurrences
+#sequences in function of occurrences
 seqs={}
 for seq,n in nboccurrences.items():
     if seqs.has_key(n):
@@ -78,7 +78,7 @@ for seq,n in nboccurrences.items():
 
 #-------------------------------------------------------------------------
 
-# traitement deux premiers
+# Treatment of the first two
 # dos= [depth,occurrence,sequence]
 synthese = open(dirEntree+fichierEntree,'r')
 template='{}\t{}\n'
@@ -113,11 +113,11 @@ def toptwo(fichier):
          
     ftoptwo.write('-'*60+'\n')         
 
-print "traitement en cours ...."             
+print "analysing ...."             
 toptwo(synthese)      
 ftoptwo.close()
-print "fin traitement"
-print "resultats dans fichier texte : ",dirSortie+fichierSortie
+print "end of operation"
+print "results are in the files : ",dirSortie+fichierSortie
 
 
 
