@@ -4,13 +4,11 @@
 import sys
 dir='/Users/annickcros/data/All_Seqs/Merged_TopHits/'
 
-#Pour demarrer le programme faite en ligne de commande (shell ?)
-#python nomduprogramme nomdufichier (separe par des blancs)
 
-## fichier entrée synthese.txt
+## Inpute file synthese.txt
 synthese=open(dir+'Merged_TopHits_102815.txt','r')
 
-##fichier sortie parseSynthese.txt
+## Output file parseSynthese.txt
 fparse = open('/Users/annickcros/data/Genotypes/parseSynthese_min10_102815.txt','w')
 ##fichier sortie counts_parseSynthese.txt 
 fcounts=open('/Users/annickcros/data/Genotypes/counts_parseSynthese_min10_102815.txt','w')
@@ -93,8 +91,8 @@ for fileName in mapNameSeq:
 fparse.close()
 
 
-## ecriture fichier counts.txt
-print(u'écriture du fichier counts.txt')
+## Writing file counts.txt
+print(u'Write Count file counts.txt')
 titres=['primers','sites','cols','depths']
 separation='-'*80+'\n'
 for data in sequences.iteritems():
@@ -109,7 +107,7 @@ for data in sequences.iteritems():
     fcounts.write(separation)
 fcounts.close()
 
-print(u'traitement terminé')
+print(u'Finished')
 
 # #     print seq 
 # #     print "\t", "primers %s" % sequences[seq][0]
