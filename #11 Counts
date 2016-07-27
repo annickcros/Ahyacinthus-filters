@@ -5,7 +5,7 @@ import sys
 
 #synthese = open(sys.argv[1], 'r')
 synthese = open('/Users/annickcros/data/All_seqs/Merged_TopHits/Merged_TopHits_102815.txt','r')
-#fichier sortie counts
+#Output file with counts
 fsortie=open('/Users/annickcros/data/All_seqs/Merged_TopHits/counts_Merged_102815.txt','w')
 
 # sequence: [ (primers list), (sites list), (cols list), (depths list), (fileName_list)]
@@ -60,7 +60,7 @@ for data in sequences.iteritems():
         
 fsortie.close()
 
-print u'traitement terminé'
+print u'Finished'
             
     
     
