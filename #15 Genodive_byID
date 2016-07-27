@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import re
 
-# zone modifiable
-# 
+###
+
 dirEntree='/Users/annickcros/data/Genotypes/topTwo_alea_09/'
 dirSortie='/Users/annickcros/data/Genodive/STR_09/'
 fichierEntree='topTwo_alea_000.txt'
@@ -17,13 +17,13 @@ listePrimersExclus=[]              #exemple [1,2] exclude primers 1 and 2
 #------------------------------------------------------------
 synthese = open(dirEntree+fichierEntree,'r')
 listePrimersExclus=[str(p) for p in listePrimersExclus]
-# nbscp : nombre de Sx_Cy_z
-# populations : liste des  populations
-# individus : liste des individus Sx_Cy
-# primers : ensemble des primers z
-# index[sequence] : numerotation des sequences
-# sequences[i] : sequence de numero i
-# datasIndividus dict[idIndividu] : [dict[primer] : [seq1,seq2,......]]
+# nbscp : number of Sx_Cy_z
+# populations : list of populations
+# individuals : list of individuals Sx_Cy
+# primers : list of primers z
+# index[sequence] : numbering of sequences
+# sequences[i] : sequence of number i
+# datasIndividuals dict[idIndividu] : [dict[primer] : [seq1,seq2,......]]
 
 
 def extractionDatas(fichier):  
@@ -77,13 +77,13 @@ def extractionDatas(fichier):
   individus=list(individus)
   return [nbscp,individus,populations,primers,index,sequences,datasIndividus] 
 
-#organisation des donnees
-print 'traitement en cours...'
+#organization of data
+print 'in operation...'
 nbscp,individus,populations,primers,index,sequences,datasIndividus = extractionDatas(synthese)
 longIdSeq=len(str(max(sequences.keys())))
 
-# tri noms individus par site,colonnie
-#fonction pour tri des individus Sx_Cy
+# triage of names of individuals by site and colonies 
+#function for the triage of individuals Sx_Cy
 def f(x):
   s,c=x.split('_')
   s=int(s[1:])
@@ -92,8 +92,8 @@ def f(x):
 
 individus.sort(key= lambda x:f(x))
   
-#traitement des donnees pour affichage
-# creation la table de genotypes : (liste) tableGenotypes
+#treatment of data for display 
+# creation of the genotype table:  (liste) tableGenotypes
 
 
 nbLoci=len(primers)
@@ -122,7 +122,7 @@ for idInd in individus:
 maxPloidyLevel=maxLevel  
 
 
-#creations lignes
+#creations lines
 colPopulations='\t'.join(populations)                     
 nomsLoci='\t'.join(['loc'+str(p) for p in primers])  
 
@@ -133,7 +133,7 @@ li4='{}\t{}\t{}\n'.format('Pop','Inds',nomsLoci)
 li5=tableGenotypes
 lignes=[li1,li2,li3,li4,li5]
 
-#sortie fichier
+#file output
 fgenodive=open(dirSortie+fichierSortieGenodive,'w')
 for li in lignes:
   fgenodive.write(li)
@@ -150,9 +150,9 @@ fgenodive.close()
 frepertoire.close()
 synthese.close()
 
-print '\nle fichier sortie est : '+dirSortie+fichierSortieGenodive
-print '\nle fichier repertoire de sequences est : ',dirSortie+fichierSortieRepertoire
-print "\nfin traitement"
+print '\nle the output file is : '+dirSortie+fichierSortieGenodive
+print '\nle the file of sequence is : ',dirSortie+fichierSortieRepertoire
+print "\nend of treatment"
 
 
 
