@@ -4,7 +4,7 @@ import re, os, random
 
 
 #filters the top two sequences by depth, if depth is the same choice is made randomly 
-#sortie dans le fichier topTwo.txt
+#output in the file topTwo.txt
 
 
 dirEntree='/Users/annickcros/data/Cleanup09/satellite_09/'
@@ -35,12 +35,12 @@ def renumfichier(dir,racine):
 fichierSortie=renumfichier(dirSortie,racine)
 ftoptwo= open(dirSortie+fichierSortie,'w')
 
-# traitement deux premiers
+# treatement of first two
 # lds= liste [[depth,sequence],..]
-# nbscp nombre de Sx_Cy_z.fasta
-# premier depth le plus eleve 
-# second depth le plus eleve apres premier
-# ld liste des depths
+# nbscp number of Sx_Cy_z.fasta
+# first depth is the highest
+# second depth is second highest after first
+# ld list of depth
 
 synthese = open(dirEntree+fichierEntree,'r')
 template='{}\t{}\n'
@@ -99,16 +99,16 @@ def toptwo(fichier):
         if (premier==second):
             print premier
             print second
-            print "cas particulier, egalite des profondeurs et des sequences ",scp
+            print "equality of depth and of sequences",scp
             x=raw_input()
      
     ftoptwo.write(line)
    
-print "traitement en cours ...."             
+print "in operation ...."             
 toptwo(synthese)      
 ftoptwo.close()
-print "fin traitement"
-print "resultats dans fichier texte : ",dirSortie+fichierSortie
+print "end of operation"
+print "results are in the following file: ",dirSortie+fichierSortie
 
 
 
